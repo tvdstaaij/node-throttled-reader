@@ -1,0 +1,22 @@
+{
+  "name": "throttled-reader",
+  "version": "0.1.0",
+  "description": "Node.js Readable stream capping average data rate by limiting reads from the source",
+  "keywords": [
+    "stream",
+    "throttle",
+    "limit",
+    "bandwidth"
+  ],
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tvdstaaij/node-throttled-reader.git"
+  },
+  "author": "Tim van der Staaij",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tvdstaaij/node-throttled-reader/issues"
+  },
+  "homepage": "https://github.com/tvdstaaij/node-throttled-reader#readme"
+}
