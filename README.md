@@ -17,6 +17,8 @@ Just wrap your readable stream in a `ThrottledReader` instance, which is also
 a `Readable`. You can then use the throttled stream in its place.
 
 ```javascript
+var ThrottledReader = require('throttled-reader');
+
 var throttledStream = new ThrottledReader(sourceStream, {
     averageRate: 10 * 1024 // In bytes per second
 });
