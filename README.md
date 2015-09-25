@@ -41,6 +41,7 @@ Constructor:
 
 * `readableStream` is the [`Readable`][2] to read from.
 * `throttleOptions` may contain the following options:
+    
     Option           | Default | Description
     ---------------- | ------- | -----------
     `rate`           | 0       | Average rate to throttle to (bytes/sec).
@@ -48,6 +49,7 @@ Constructor:
     `recoveryFactor` | 0.5     | Controls how long to pause reading relative to
     &nbsp;           | &nbsp;  | the data rate. Influences accuracy, processing
     &nbsp;           | &nbsp;  | overhead and overshoot.
+    
 * `streamOptions` may contain constructor options for the new `Readable`.
 
 The data rate can be dynamically changed using `getRate()` and `setRate(rate)`.
