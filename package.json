@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/tvdstaaij/node-throttled-reader/issues"
   },
-  "homepage": "https://github.com/tvdstaaij/node-throttled-reader#readme"
+  "homepage": "https://github.com/tvdstaaij/node-throttled-reader#readme",
+  "devDependencies": {
+    "commander": "^2.8.1"
+  }
 }
