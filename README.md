@@ -1,5 +1,8 @@
 # throttled-reader
 
+[![npm version](https://img.shields.io/npm/v/throttled-reader.svg)](https://www.npmjs.com/package/throttled-reader)
+[![npm license](https://img.shields.io/npm/l/throttled-reader.svg)](https://www.npmjs.com/package/throttled-reader)
+
 This module is for throttling the data rate on a `Readable` stream. This is not
 done by buffering but rather by rate-limited reading in paused mode, meaning the
 throttle is relatively close to the source.
