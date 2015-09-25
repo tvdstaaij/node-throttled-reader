@@ -23,7 +23,7 @@ var server = net.createServer(function(socket) {
     console.log('Accepted connection from ' + clientId);
 
     var throttledStream = new ThrottledReader(socket, {
-        averageRate: program.rate,
+        rate: program.rate,
         recoveryFactor: program.recoveryFactor || undefined
     });
 
