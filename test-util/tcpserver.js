@@ -5,14 +5,14 @@ var ThrottledReader = require('../index');
 program
     .usage('[options]')
     .option('-p, --port <port>',
-    'tcp port to listen on (required)', parseInt)
+    'tcp port to listen on [required]', parseInt)
     .option('-r, --rate <bps>',
-    'average byte rate to throttle to (required)', parseInt)
+    'average byte rate to throttle to', parseInt)
     .option('-f, --recovery-factor <f>',
     'factor controlling how often to pause the stream (low=fast)', parseFloat)
     .parse(process.argv);
 
-program.port && program.rate || program.help();
+program.port || program.help();
 
 var server = net.createServer(function(socket) {
     var startTime = new Date();
@@ -23,7 +23,7 @@ var server = net.createServer(function(socket) {
     console.log('Accepted connection from ' + clientId);
 
     var throttledStream = new ThrottledReader(socket, {
-        rate: program.rate,
+        rate: program.rate || 0,
         recoveryFactor: program.recoveryFactor || undefined
     });
 

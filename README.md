@@ -45,7 +45,7 @@ Constructor:
     Option           | Default | Description
     ---------------- | ------- | -----------
     `rate`           | 0       | Average rate to throttle to (bytes/sec).
-    &nbsp;           | &nbsp;  | Must be set to a positive value.
+    &nbsp;           | &nbsp;  | Zero allows everything through untouched.
     `recoveryFactor` | 0.5     | Controls how long to pause reading relative to
     &nbsp;           | &nbsp;  | the data rate. Influences accuracy, processing
     &nbsp;           | &nbsp;  | overhead and overshoot.

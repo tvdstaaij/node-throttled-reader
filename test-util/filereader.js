@@ -5,13 +5,13 @@ var ThrottledReader = require('../index');
 program
     .usage('[options] <file>')
     .option('-r, --rate <bps>',
-    'average byte rate to throttle to (required)', parseInt)
+    'average byte rate to throttle to', parseInt)
     .option('-f, --recovery-factor <f>',
     'factor controlling how often to pause the stream (low=fast)', parseFloat)
     .parse(process.argv);
 
 var filename = program.args[0];
-program.rate && filename && program.args.length === 1 || program.help();
+filename && program.args.length === 1 || program.help();
 
 var readStream = fs.createReadStream(filename);
 var startTime = new Date();
@@ -20,7 +20,7 @@ var byteCount = 0;
 console.log('Reading ' + filename);
 
 var throttledStream = new ThrottledReader(readStream, {
-    rate: program.rate,
+    rate: program.rate || 0,
     recoveryFactor: program.recoveryFactor || undefined
 });
 
