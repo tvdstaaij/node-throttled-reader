@@ -1,6 +1,6 @@
 {
   "name": "throttled-reader",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Node.js Readable stream capping average data rate by limiting reads from the source",
   "keywords": [
     "stream",
