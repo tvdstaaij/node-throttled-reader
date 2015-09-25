@@ -9,7 +9,7 @@ program
     .option('-r, --rate <bps>',
     'average byte rate to throttle to (required)', parseInt)
     .option('-f, --recovery-factor <f>',
-    'how often to re-calculate bandwidth', parseFloat)
+    'factor controlling how often to pause the stream (low=fast)', parseFloat)
     .parse(process.argv);
 
 program.port && program.rate || program.help();
