@@ -1,6 +1,7 @@
 var program = require('commander');
 var net = require('net');
-var ThrottledReader = require('../index');
+var reportRate = require('./lib/report-rate');
+var ThrottledReader = require('../');
 
 program
     .usage('[options]')
@@ -8,14 +9,14 @@ program
     'tcp port to listen on [required]', parseInt)
     .option('-r, --rate <bps>',
     'average byte rate to throttle to', parseInt)
-    .option('-f, --recovery-factor <f>',
-    'factor controlling how often to pause the stream (low=fast)', parseFloat)
+    .option('-i, --cooldown-interval <ms>',
+    'how often to check whether reading can resume', parseInt)
     .parse(process.argv);
 
 program.port || program.help();
 
 var server = net.createServer(function(socket) {
-    var startTime = new Date();
+    var startTime = null;
     var chunkCount = 0;
     var byteCount = 0;
     var clientId = socket.remoteAddress + ':' + socket.remotePort;
@@ -24,10 +25,11 @@ var server = net.createServer(function(socket) {
 
     var throttledStream = new ThrottledReader(socket, {
         rate: program.rate || 0,
-        recoveryFactor: program.recoveryFactor || undefined
+        cooldownInterval: program.cooldownInterval || undefined
     });
 
     throttledStream.on('data', function(chunk) {
+        startTime = startTime || new Date();
         chunkCount++;
         byteCount += chunk.length;
     });
@@ -42,17 +44,10 @@ var server = net.createServer(function(socket) {
 
     throttledStream.on('end', function() {
         console.log(clientPrefix + 'End of stream');
-        if (!byteCount) {
-            console.log(clientPrefix + 'Did not receive any data');
-            return;
-        }
-        var duration = (new Date().getTime() - startTime.getTime()) / 1000;
-        console.log(clientPrefix + 'Received ' + byteCount + ' bytes in ' +
-            chunkCount + ' chunks (avg. ' + Math.round(byteCount / chunkCount) +
-            ' bytes/chunk)');
-        console.log(clientPrefix + 'Received ' + byteCount + ' bytes in ' +
-            duration + ' seconds (avg. ' + Math.round(byteCount / duration) +
-            ' bytes/second)');
+        reportRate(byteCount, chunkCount, startTime, program.rate)
+            .forEach(function(message) {
+                console.log(clientPrefix + message);
+            });
     });
 });
 
