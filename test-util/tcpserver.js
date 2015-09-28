@@ -3,6 +3,10 @@ var net = require('net');
 var reportRate = require('./lib/report-rate');
 var ThrottledReader = require('../');
 
+/* Note that for this utility to work, a connecting client should dump its
+ * data in one go and then immediately close the connection.
+ */
+
 program
     .usage('[options]')
     .option('-p, --port <port>',
