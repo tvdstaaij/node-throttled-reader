@@ -9,6 +9,9 @@
     "bandwidth"
   ],
   "main": "index.js",
+  "scripts": {
+    "test": "mocha --reporter spec"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tvdstaaij/node-throttled-reader.git"
