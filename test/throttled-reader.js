@@ -1,17 +1,18 @@
 var assert = require('chai').assert;
 var fs = require('fs');
 var tmp = require('tmp');
+var SlowReadable = require('./lib/slow-readable');
 var ThrottledReader = require('../');
 
 var KB = Math.pow(10, 3);
 var MB = Math.pow(KB, 2);
 
 describe('ThrottledReader', function() {
-    this.timeout(10000);
+    this.timeout(7500);
 
     [
         // [size, rate, tolerance%]
-        [3 * MB, 1 * MB, 10],
+        [3 * MB, 1 * MB, 5],
         [20 * MB, 10 * MB, 10],
         [1 * MB, 0.75 * MB, 10],
         [0.5 * MB, 0.5 * MB, 15],
@@ -23,39 +24,62 @@ describe('ThrottledReader', function() {
             var expectedTime = (testVector[0] / testVector[1]).toFixed(2);
             var description = 'should take ' + expectedTime + 's ' +
                 '+/-' + testVector[2] + '% to read a file of ' +
-                testVector[0] + ' bytes at a rate of ' + testVector[1] +
-                ' bytes per second';
+                testVector[0] + 'B at a rate of ' + testVector[1] + 'B/s';
             it(description, function(done) {
                 testFileRead.apply(undefined, testVector.concat(done));
             });
         });
 
-    it('should read a 2MB file with an unlimited rate within 100 ms',
+    it('should read a 2MB file with an unlimited rate within 150ms',
         function(done) {
-            testFileRead(2000000, 0, 100, done);
+            testFileRead(2 * MB, 0, -150, done);
         });
 
-    it('should read a 2MB file with a 5MB/s rate within 100 ms',
+    it('should read a 500KB file with a 20MB/s rate within 150ms',
         function(done) {
-            testFileRead(2000000, 5000000, 100, done);
+            testFileRead(500 * KB, 20 * MB, -150, done);
         });
 
-    it('should be able to read a single-byte file without throttle',
+    it('should be able to read a single-byte file without throttle within 50ms',
         function(done) {
-            testFileRead(1, 0, null, done);
+            testFileRead(1, 0, -50, done);
         });
 
+    // This does not currently pass within 50ms because it triggers a cooldown
+    // Possible improvement for the throughput calculation
     it('should be able to read a single-byte file with throttle',
         function(done) {
-            testFileRead(1, 10, null, done);
+            testFileRead(1, 100, null, done);
+        });
+
+    it('should be able to read a slower readable', function(done) {
+        var size = 10;
+        var readable = new SlowReadable(size);
+        testRate(readable, size, size * 10, -1150, done);
+    });
+
+    it('should accelerate after a sudden throttle release',
+        function(done) {
+            var throttledStream = testFileRead(10 * MB, 5 * MB, -1150, done);
+            setTimeout(function() {
+                throttledStream.setRate(0);
+            }, 999);
         });
 });
 
 function testFileRead(size, rate, tolerance, cb) {
     var tempFile = tmp.fileSync().name;
     fs.writeFileSync(tempFile, new Buffer(size).fill(0));
-    var throttledStream = new ThrottledReader(fs.createReadStream(tempFile), {
-        rate: rate
+    var fileStream = fs.createReadStream(tempFile);
+    return testRate.bind(undefined, fileStream).apply(undefined, arguments);
+}
+
+// Positive tolerance is a percentage;
+// negative tolerance is an absolute limit (ms)
+function testRate(source, size, rate, tolerance, cb) {
+    var throttledStream = new ThrottledReader(source, {
+        rate: rate,
+        cooldownInterval: 50
     });
     var startTime = null;
     var endTime = null;
@@ -66,17 +90,19 @@ function testFileRead(size, rate, tolerance, cb) {
     function finish() {
         assert(endTime && startTime);
         var measured = endTime - startTime;
-        if (rate > 0 && tolerance !== null) {
+        console.log('Measured ' + measured +' ms');
+        if (tolerance > 0) {
             var expected = size / rate * 1000;
             var error = Math.abs(measured - expected);
             var acceptable = expected / 100 * tolerance;
+            console.log('Error is ' + error.toFixed(3) + 'ms on a ' +
+                acceptable.toFixed(3) + 'ms margin');
             assert.isBelow(error, acceptable);
-        } else {
-            if (tolerance > 0) {
-                assert.isBelow(measured, tolerance);
-            }
+        } else if (tolerance < 0) {
+            tolerance = Math.abs(tolerance);
+            console.log('Limit is ' + tolerance + 'ms');
+            assert.isBelow(measured, tolerance);
         }
-        console.log(measured.toFixed(3));
         cb();
     }
 
@@ -97,4 +123,5 @@ function testFileRead(size, rate, tolerance, cb) {
         ended = true;
         if (closed) finish();
     });
+    return throttledStream;
 }
