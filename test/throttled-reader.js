@@ -17,7 +17,7 @@ describe('ThrottledReader', function() {
         [1 * MB, 0.75 * MB, 15],
         [0.5 * MB, 0.5 * MB, 15],
         [3/5 * MB, 1/5 * MB, 15],
-        [2 * MB, 3 * MB, 15],
+        [3 * MB, 2 * MB, 15],
         [50 * KB, 10 * KB, 25]
     ]
         .forEach(function(testVector) {
