@@ -12,9 +12,9 @@ describe('ThrottledReader', function() {
 
     [
         // [size, rate, tolerance%]
-        [3 * MB, 1 * MB, 5],
-        [20 * MB, 10 * MB, 10],
-        [1 * MB, 0.75 * MB, 10],
+        [3 * MB, 1 * MB, 10],
+        [20 * MB, 10 * MB, 15],
+        [1 * MB, 0.75 * MB, 15],
         [0.5 * MB, 0.5 * MB, 15],
         [3/5 * MB, 1/5 * MB, 15],
         [2 * MB, 3 * MB, 15],
