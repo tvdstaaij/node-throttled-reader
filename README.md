@@ -12,9 +12,9 @@ used to effectively throttle an incoming TCP stream, affecting the other side
 of the connection as well because the internal Node and OS buffers will congest.
 
 Accuracy can be anywhere from <1% to over 25% depending on the rate and the
-kind of source. High rates and streams with few/small buffers tend to be
-throttled more accurately. There's plenty og room for improvement here; it would
-be a great help if someone could answer
+kind of source. High rate limits, slower streams and streams with few/small
+buffers tend to be throttled more accurately. There's plenty of room for
+improvement here; it would be a great help if someone could answer
 [Reading a paused stream in fixed size chunks][1] on Stack Overflow, or offer
 other suggestions/patches for improving throttle accuracy. The utilities
 in `test-util` can be used to perform measurements with socket and file streams.
