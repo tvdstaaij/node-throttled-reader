@@ -19,6 +19,14 @@ improvement here; it would be a great help if someone could answer
 other suggestions/patches for improving throttle accuracy. The utilities
 in `test-util` can be used to perform measurements with socket and file streams.
 
+The module has been tested with Node versions 0.12.7 and 4.1.0. Run the tests
+to see whether it works with your version:
+```bash
+npm install
+npm install -g mocha
+npm test
+```
+
 ## Basic usage
 
 Just wrap your readable stream in a `ThrottledReader` instance, which is also
