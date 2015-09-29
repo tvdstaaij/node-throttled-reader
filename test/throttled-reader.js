@@ -58,19 +58,41 @@ describe('ThrottledReader', function() {
         testRate(readable, size, size * 10, -1150, done);
     });
 
-    it('should accelerate after a sudden throttle release',
-        function(done) {
-            var throttledStream = testFileRead(10 * MB, 5 * MB, -1150, done);
-            setTimeout(function() {
-                throttledStream.setRate(0);
-            }, 999);
+    it('should accelerate after a sudden throttle release', function(done) {
+        var throttledStream = testFileRead(10 * MB, 5 * MB, -1150, done);
+        setTimeout(function() {
+            throttledStream.setRate(0);
+        }, 999);
+    });
+
+    it('should function in cascade', function(done) {
+        var firstStageEnded = false;
+        var testVector = [10 * MB, 5 * MB, 15];
+        var fileStream = getTestFileStream(testVector[0]);
+        var throttledStream = new ThrottledReader(fileStream, {
+            rate: testVector[1]
         });
+        throttledStream.on('end', function() {
+            firstStageEnded = true;
+        });
+        testRate.apply(undefined, [throttledStream].concat(testVector).concat([
+            function() {
+                assert(firstStageEnded);
+                done();
+            }
+        ]));
+    });
+
 });
 
-function testFileRead(size, rate, tolerance, cb) {
+function getTestFileStream(size) {
     var tempFile = tmp.fileSync().name;
     fs.writeFileSync(tempFile, new Buffer(size).fill(0));
-    var fileStream = fs.createReadStream(tempFile);
+    return fs.createReadStream(tempFile);
+}
+
+function testFileRead(size, rate, tolerance, cb) {
+    var fileStream = getTestFileStream(size);
     return testRate.bind(undefined, fileStream).apply(undefined, arguments);
 }
 

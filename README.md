@@ -31,6 +31,7 @@ npm test
 
 Just wrap your readable stream in a `ThrottledReader` instance, which is also
 a `Readable`. You can then use the throttled stream in its place.
+`ThrottledReader` must be the only consumer of the source stream's data!
 
 ```javascript
 var ThrottledReader = require('throttled-reader');
