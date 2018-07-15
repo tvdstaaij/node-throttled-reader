@@ -1,6 +1,7 @@
 var assert = require('chai').assert;
 var fs = require('fs');
 var tmp = require('tmp');
+var ByteToObjectTransform = require('./lib/byte-to-object-transform');
 var SlowReadable = require('./lib/slow-readable');
 var ThrottledReader = require('../');
 
@@ -55,7 +56,7 @@ describe('ThrottledReader', function() {
     it('should be able to read a slower readable', function(done) {
         var size = 10;
         var readable = new SlowReadable(size);
-        testRate(readable, size, size * 10, -1150, done);
+        testRate(readable, null, size, size * 10, -1150, done);
     });
 
     it('should accelerate after a sudden throttle release', function(done) {
@@ -75,7 +76,9 @@ describe('ThrottledReader', function() {
         throttledStream.on('end', function() {
             firstStageEnded = true;
         });
-        testRate.apply(undefined, [throttledStream].concat(testVector).concat([
+        testRate.apply(undefined, [
+            throttledStream, null
+        ].concat(testVector).concat([
             function() {
                 assert(firstStageEnded);
                 done();
@@ -83,6 +86,17 @@ describe('ThrottledReader', function() {
         ]));
     });
 
+    it('should function with an object mode stream', function(done) {
+        var fileSize = 3 * MB;
+        var rate = 1 * MB;
+        var tolerancePercentage = 10;
+        var fileStream = getTestFileStream(fileSize);
+        var objectStream = fileStream.pipe(new ByteToObjectTransform())
+            .on('error', function(err) { throw err; });
+        testRate(objectStream, {
+            objectMode: true
+        }, fileSize, rate, tolerancePercentage, done);
+    });
 });
 
 function getTestFileStream(size) {
@@ -93,16 +107,17 @@ function getTestFileStream(size) {
 
 function testFileRead(size, rate, tolerance, cb) {
     var fileStream = getTestFileStream(size);
-    return testRate.bind(undefined, fileStream).apply(undefined, arguments);
+    return testRate.bind(undefined, fileStream, null)
+        .apply(undefined, arguments);
 }
 
 // Positive tolerance is a percentage;
 // negative tolerance is an absolute limit (ms)
-function testRate(source, size, rate, tolerance, cb) {
+function testRate(source, streamOptions, size, rate, tolerance, cb) {
     var throttledStream = new ThrottledReader(source, {
         rate: rate,
         cooldownInterval: 50
-    });
+    }, streamOptions || {});
     var startTime = null;
     var endTime = null;
     var byteCount = 0;
@@ -130,10 +145,16 @@ function testRate(source, size, rate, tolerance, cb) {
 
     throttledStream.on('data', function(chunk) {
         startTime = startTime || new Date();
-        assert.instanceOf(chunk, Buffer);
-        assert.isAbove(chunk.length, 0);
-        assert(chunk.equals(new Buffer(chunk.length).fill(0)));
-        byteCount += chunk.length;
+        if (Buffer.isBuffer(chunk)) {
+            assert.isAbove(chunk.length, 0);
+            assert(chunk.equals(new Buffer(chunk.length).fill(0)));
+            byteCount += chunk.length;
+        } else if (chunk && typeof chunk === 'object') {
+            assert(chunk.byte === 0);
+            byteCount++;
+        } else {
+            assert(false);
+        }
     });
     throttledStream.on('close', function() {
         closed = true;
